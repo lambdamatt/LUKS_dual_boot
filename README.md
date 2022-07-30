@@ -22,19 +22,25 @@ This guide assumes that the drive is labeled as SDA. This is what the output of 
 ![](images/3.png)
 First we will setup /dev/sda1 for use as the EFI partition
 
-`mkfs.vfat -F 16 -n EFI-SP /dev/sda1`
+```
+mkfs.vfat -F 16 -n EFI-SP /dev/sda1
+```
 
 ## 4
 ![](images/4.png)
 Now we will build the LUKS contianer for the 20.04 root partition
 
-`cryptsetup luksFormat /dev/sda3`
+```
+cryptsetup luksFormat /dev/sda3
+```
 
 ## 5
 ![](images/5.png)
 Now we will decrypt and map /dev/sda3 to sda3_crypt
 
-`cryptsetup open /dev/sda3 sda3_crypt`
+```
+cryptsetup open /dev/sda3 sda3_crypt
+```
 
 `ls /dev/mapper` shows that is is mapped
 
@@ -42,7 +48,8 @@ Now we will decrypt and map /dev/sda3 to sda3_crypt
 ![](images/6.png)
 Format /dev/sda2 as ext4 
 
-`mkfs.ext4 L boot_2004 /dev/sda2`
+```mkfs.ext4 L boot_2004 /dev/sda2
+```
 
 ## 7
 ![](images/7.png)
@@ -117,10 +124,11 @@ After Installtion is complete, choose Continue Testing
 ![](images/18.png)
 We need to chroot into the new install so we have to mount the proc sys dev and etc/resolv devices onto the new install before we reboot
 
-`for n in proc sys dev etc/resolv.conf; do mount --rbind /$n /target/$n; done`
-`chroot /target`
-`mount -av`
-
+```
+for n in proc sys dev etc/resolv.conf; do mount --rbind /$n /target/$n; done
+chroot /target
+mount -av
+```
 you should see:
 
 ```
@@ -135,7 +143,9 @@ Create a crypttab file
 sda3_crypt is the mapper lable for sda3, the UUID should be for /dev/sda3 and 'none luks,discard' options are added
 This one-liner will set it up correctly, assuming again that the device is /dev/sda
 
-`echo "sda3_crypt UUID=$(blkid -s UUID -o value /dev/sda3) none luks,discard" > /etc/crypttab`
+```
+echo "sda3_crypt UUID=$(blkid -s UUID -o value /dev/sda3) none luks,discard" > /etc/crypttab
+```
 
 ## 20 
 ![](images/20.png)
@@ -177,23 +187,29 @@ it works
 ![](images/28.png)
 similar to what we did for 20.04, but this time we will be using /dev/sda4 for /boot and /dev/sda5 for the LUKS partition
 
-`cryptsetup luksFormat /dev/sda5`
+```
+cryptsetup luksFormat /dev/sda5
+```
 
 ## 29
 ![](images/29.png)
 open and setup the device mapper to sda5_crypt
 
-`cryptsetup open /dev/sda5 sda5_crypt`
+```
+cryptsetup open /dev/sda5 sda5_crypt
+```
 
 ## 30
 ![](images/30.png)
 create an ext4 filesystem on /dev/sda4
 
-`mkfs.ext4 -L boot_1804 /dev/sda4`
-
+```
+mkfs.ext4 -L boot_1804 /dev/sda4
+```
 ## 31
 ![](images/31.png)
 NOTE-- I messed up the LVM naming convention here. What I did works, but 100% of the documentation uses <<name>>--vg like i did for 20.04. You may want to sub 1804-vg for luks-1804 in the following commands.
+
 ```
 pvcreate/dev/mapper/sda5_crypt
 vgcreate luks-1804 /dev/mapper/sda5_crypt
@@ -243,7 +259,9 @@ Install and continue testing upon completion
 ![](images/39.png)
 18.04 installer does not handle the LVM to /target mount as well as 20.04 so I ran
 
-`mount /dev/mapper/luks--1804-root /target`
+```
+mount /dev/mapper/luks--1804-root /target
+```
 
 to mount it /target
 then:
@@ -255,13 +273,17 @@ mount -av
 ```
 
 Then, very similar to for 20.04, just shifting from sda3 to sda5, setup /etc/crypttab
-`echo "sda5_crypt UUID=$(blkid -s UUID -o value /dev/sda5) none luks,discard" > /etc/crypttab`
-
+```
+echo "sda5_crypt UUID=$(blkid -s UUID -o value /dev/sda5) none luks,discard" > /etc/crypttab
+```
 ## 40
 ![](images/40.png)
-`update-initramfs -u -k all`
-so that the initramfs will know about the crypttab
-** we are relying on 20.04 GRUB so you do not need to update GRUB **
+
+```
+update-initramfs -u -k all
+```
+So that the initramfs will know about the crypttab
+** We are relying on 20.04 GRUB so you do not need to update GRUB **
 
 ## 41
 ![](images/41.png)
@@ -283,17 +305,18 @@ update-grub is not finding the initrd images for the 5.4 kernel. Rather than for
 decrypt /dev/sda5 and map to expected label of sda5_crypt
 cryptsetup open /dev/sda5 sda5_crypt 
 ```
-activate root lv
+Activate root lv:
 
 ```
 lvchange -ay luks-1804
 ```
 
-mount the lv to /mnt
+Mount the lv to /mnt:
 
 ```
 mount /dev/mapper/luks--1804-root /mnt
 ```
+
 ## 45 
 ![](images/45.png)
 Run `update_grub` and it will find 18.04.6 and add a boot menu entry. 
