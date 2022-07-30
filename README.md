@@ -1,4 +1,5 @@
-# Dual Boot 20.04 and 18.04 with LUKS
+# Dual Boot Ubuntu 20.04 and 18.04 with LUKS
+
 ## 1
 ![](images/1.png)
 Format the SATA device and create 5 new partitions:
@@ -9,7 +10,7 @@ Format the SATA device and create 5 new partitions:
 * Part5 will be the 18.04 LUKS partition
 
  Partition 1 should be 2GB
- The boot partitions should be big enough to hold all of the kernels that will ever be installed 10GB is very safe
+ The boot partitions should be big enough to hold all of the kernels that will ever be installed. 10GB is very safe
  The LUKS partitions should half of the total drive capacity each, less the 2GB used for EFI and the amount used for the boot partitions.
 
 **NOTE--** These will all be formatted later on. **DO NOT** select the encryption options. Use defaults for now
@@ -28,7 +29,7 @@ mkfs.vfat -F 16 -n EFI-SP /dev/sda1
 
 ## 4
 ![](images/4.png)
-Now we will build the LUKS contianer for the 20.04 root partition
+Now we will build the LUKS container for the 20.04 root partition
 
 ```
 cryptsetup luksFormat /dev/sda3
@@ -118,11 +119,11 @@ Select the root device-- /dev/sda as the bootloader installation device
 
 ## 17
 ![](images/17.png)
-After Installtion is complete, choose Continue Testing
+After Installation is complete, choose Continue Testing
 
 ## 18
 ![](images/18.png)
-We need to chroot into the new install so we have to mount the proc sys dev and etc/resolv devices onto the new install before we reboot
+We need to chroot into the new install so we have to mount the proc sys dev and etc/resol.conf devices onto the new install before we reboot
 
 ```
 for n in proc sys dev etc/resolv.conf; do mount --rbind /$n /target/$n; done
@@ -140,7 +141,7 @@ you should see:
 ## 19
 ![](images/19.png)
 Create a crypttab file
-sda3_crypt is the mapper lable for sda3, the UUID should be for /dev/sda3 and 'none luks,discard' options are added
+sda3_crypt is the mapper label for sda3, the UUID should be for /dev/sda3 and 'none luks,discard' options are added
 This one-liner will set it up correctly, assuming again that the device is /dev/sda
 
 ```
@@ -155,7 +156,7 @@ I neglected to update-initramfs before I rebooted
 
 ## 21
 ![](images/21.png)
-I inclued these and the next several slides to show you how to back out of the mistake I made, I thought it might be helpful
+I included these and the next several slides to show you how to back out of the mistake I made, I thought it might be helpful
 You can see here that /dev/mapper doesn't have my LVM volume group because GRUB did not prompt to decrypt the partition
 
 ## 22
@@ -171,6 +172,10 @@ this will map the the expected mapper location and boot can resume
 ## 24
 ![](images/24.png)
 This is what I should have done on slide 20
+
+```
+update-initramfs -u -k all
+```
 
 ## 25 
 ![](images/25.png)
@@ -227,9 +232,9 @@ lvcreate -l 80%FREE -n root 1804-vg
 
 ## 32
 ![](images/32.png)
-launch unquity without the installing a bootloader 
+launch ubiquity without the installing a bootloader 
 
-`uquiquity -b`
+`ubiquity -b`
 
 ## 33
 ![](images/33.png)
@@ -245,7 +250,7 @@ Installation type: Something else
 
 ## 36
 ![](images/36.png)
-Check that /dev/sda is used as EFI System Partion. No change should be needed here
+Check that /dev/sda is used as EFI System Partition. No change should be needed here
 
 ## 37
 ![](images/37.png)
@@ -295,7 +300,7 @@ This is the GRUB menu for 20.04-- It doesn't know about 18.04 yet so we have one
 ## 43
 ![](images/43.png)
 
-update-grub is not finding the initrd images for the 5.4 kernel. Rather than forcing it to, we are going to expose the 18.04 install and run again so it sees it as a seperate OS
+update-grub is not finding the initrd images for the 5.4 kernel. Rather than forcing it to, we are going to expose the 18.04 install and run again so it sees it as a separate OS
 
 ## 44
 ![](images/44.png)
